@@ -12,7 +12,7 @@
                 font-family: 'Roboto', sans-serif;
                 border-left: 8px solid #19A8EA;
             }
-            .mainContainer {
+            .header {
                 padding: 10px 60px;
             }
             .appName {
@@ -49,14 +49,24 @@
                 box-shadow: 0 3px 10px rgba(0, 0, 0, 0.16);
                 border-radius: 2px;
             }
+            .gridItemsRow {
+                display: table;
+            }
+            .gridItemContainer {
+                display: table-cell;
+                min-width: 330px;
+                max-width: 527px;
+                padding: 10px 15px;
+                box-sizing: border-box;
+            }
             .gridItem {
-                width: 497px;
-                display: inline-block;
+                width: 100%;
                 text-align: left;
-                margin: 10px 15px;
             }
             .gridItem_graph {
                 background-color: #f0f0f0;
+                background-repeat: no-repeat;
+                background-size: cover;
                 height: 228px;
                 border-top: 2px solid rgba(255, 255, 255, 0.5);
                 box-sizing: border-box;
@@ -76,110 +86,207 @@
             }
             .gridItem_serverName {
                 color: #999;
-
+            }
+            #gridsContainer {
+                padding: 20px 40px 0 40px;
             }
         </style>
         <title>Munin for Android</title>
         <link href='http://fonts.googleapis.com/css?family=Roboto:400,300' rel='stylesheet' type='text/css'>
     </head>
     <body>
-        <div class="mainContainer">
-            <div class="header">
-                <div class="appName"><img src="http://www.munin-for-android.com/img/logo-hdpi.png" />Munin for Android</div>
-                <div id="gridName" class="gridName"></div>
-            </div>
-            <div id="gridsContainer" class="gridsContainer"></div>
+        <div class="header">
+            <div class="appName"><img src="http://www.munin-for-android.com/img/logo-hdpi.png" />Munin for Android</div>
+            <div id="gridName" class="gridName"></div>
         </div>
+        <div id="gridsContainer" class="gridsContainer"></div>
 
         <script type="text/javascript" src="//www.gstatic.com/cast/sdk/libs/receiver/2.0.0/cast_receiver.js"></script>
         <script type="text/javascript" src="//code.jquery.com/jquery-2.1.3.min.js"></script>
         <script type="text/javascript">
+            // Set CHROMECAST to false when debugging on a web browser
+            var CHROMECAST = false;
+            var DEBUG = true;
+
             window.onload = function() {
-                cast.receiver.logger.setLevelValue(0);
-                window.castReceiverManager = cast.receiver.CastReceiverManager.getInstance();
-                console.log('Starting Receiver Manager');
+                if (CHROMECAST) {
+                    cast.receiver.logger.setLevelValue(0);
+                    window.castReceiverManager = cast.receiver.CastReceiverManager.getInstance();
+                    log('Starting Receiver Manager');
 
-                // handler for the 'ready' event
-                castReceiverManager.onReady = function(event) {
-                    console.log('Received Ready event: ' + JSON.stringify(event.data));
-                    window.castReceiverManager.setApplicationState("Application status is ready...");
-                };
+                    // handler for the 'ready' event
+                    castReceiverManager.onReady = function(event) {
+                        log('Received Ready event: ' + JSON.stringify(event.data));
+                        window.castReceiverManager.setApplicationState("Application status is ready...");
+                    };
 
-                // handler for 'senderconnected' event
-                castReceiverManager.onSenderConnected = function(event) {
-                    console.log('Received Sender Connected event: ' + event.data);
-                    console.log(window.castReceiverManager.getSender(event.data).userAgent);
-                };
+                    // handler for 'senderconnected' event
+                    castReceiverManager.onSenderConnected = function(event) {
+                        log('Received Sender Connected event: ' + event.data);
+                        log(window.castReceiverManager.getSender(event.data).userAgent);
+                    };
 
-                // handler for 'senderdisconnected' event
-                castReceiverManager.onSenderDisconnected = function(event) {
-                    console.log('Received Sender Disconnected event: ' + event.data);
-                    if (window.castReceiverManager.getSenders().length == 0) {
-                        window.close();
-                    }
-                };
+                    // handler for 'senderdisconnected' event
+                    castReceiverManager.onSenderDisconnected = function(event) {
+                        log('Received Sender Disconnected event: ' + event.data);
+                        if (window.castReceiverManager.getSenders().length == 0) {
+                            window.close();
+                        }
+                    };
 
-                // handler for 'systemvolumechanged' event
-                /*castReceiverManager.onSystemVolumeChanged = function(event) {
-                    console.log('Received System Volume Changed event: ' + event.data['level'] + ' ' + event.data['muted']);
-                };*/
+                    // handler for 'systemvolumechanged' event
+                    /*castReceiverManager.onSystemVolumeChanged = function(event) {
+                        log('Received System Volume Changed event: ' + event.data['level'] + ' ' + event.data['muted']);
+                    };*/
 
-                // create a CastMessageBus to handle messages for a custom namespace
-                window.messageBus = window.castReceiverManager.getCastMessageBus(
-                        'urn:x-cast:com.chteuchteu.munin');
+                    // create a CastMessageBus to handle messages for a custom namespace
+                    window.messageBus = window.castReceiverManager.getCastMessageBus(
+                            'urn:x-cast:com.chteuchteu.munin');
 
-                // handler for the CastMessageBus message event
-                window.messageBus.onMessage = function(event) {
-                    console.log('Message [' + event.senderId + ']: ' + event.data);
-                    // display the message from the sender
-                    receiveMessage(event.data);
-                    // inform all senders on the CastMessageBus of the incoming message event
-                    // sender message listener will be invoked
-                    window.messageBus.send(event.senderId, event.data);
-                };
+                    // handler for the CastMessageBus message event
+                    window.messageBus.onMessage = function(event) {
+                        log('Message [' + event.senderId + ']: ' + event.data);
+                        // display the message from the sender
+                        receiveMessage(event.data);
+                        // inform all senders on the CastMessageBus of the incoming message event
+                        // sender message listener will be invoked
+                        window.messageBus.send(event.senderId, event.data);
+                    };
 
-                // initialize the CastReceiverManager with an application status message
-                window.castReceiverManager.start({statusText: "Application is starting"});
-                console.log('Receiver Manager started');
+                    // initialize the CastReceiverManager with an application status message
+                    window.castReceiverManager.start({statusText: "Application is starting"});
+                    log('Receiver Manager started');
+                } else {
+                    initGrid('Grid test');
+                    inflateGridItems([
+                        {'graphUrl': 'http://demo.munin-monitoring.org/munin-cgi/munin-cgi-graph/munin-monitoring.org/demo.munin-monitoring.org/multicpu1sec-day.png',
+                            'pluginName': 'multicpu1sec', 'serverName': 'demo.munin-monitoring.org', 'x': '0', 'y': '0'},
+                        {'graphUrl': 'http://demo.munin-monitoring.org/munin-cgi/munin-cgi-graph/munin-monitoring.org/demo.munin-monitoring.org/traffic-day.png',
+                            'pluginName': 'Traffic per interface', 'serverName': 'demo.munin-monitoring.org', 'x': '1', 'y': '0'},
+                        {'graphUrl': 'http://demo.munin-monitoring.org/munin-cgi/munin-cgi-graph/munin-monitoring.org/demo.munin-monitoring.org/cpu-day.png',
+                            'pluginName': 'CPU usage', 'serverName': 'demo.munin-monitoring.org', 'x': '2', 'y': '0'},
+                        {'graphUrl': 'http://demo.munin-monitoring.org/munin-cgi/munin-cgi-graph/munin-monitoring.org/demo.munin-monitoring.org/multicpu1sec-day.png',
+                            'pluginName': 'multicpu1sec', 'serverName': 'demo.munin-monitoring.org', 'x': '0', 'y': '1'},
+                        {'graphUrl': 'http://demo.munin-monitoring.org/munin-cgi/munin-cgi-graph/munin-monitoring.org/demo.munin-monitoring.org/multicpu1sec-day.png',
+                            'pluginName': 'multicpu1sec', 'serverName': 'demo.munin-monitoring.org', 'x': '2', 'y': '1'},
+                        {'graphUrl': 'http://demo.munin-monitoring.org/munin-cgi/munin-cgi-graph/munin-monitoring.org/demo.munin-monitoring.org/multicpu1sec-day.png',
+                            'pluginName': 'multicpu1sec', 'serverName': 'demo.munin-monitoring.org', 'x': '3', 'y': '1'},
+                        {'graphUrl': 'http://demo.munin-monitoring.org/munin-cgi/munin-cgi-graph/munin-monitoring.org/demo.munin-monitoring.org/multicpu1sec-day.png',
+                            'pluginName': 'multicpu1sec', 'serverName': 'demo.munin-monitoring.org', 'x': '0', 'y': '2'}
+                    ]);
+                }
             };
 
             function initGrid(gridName) {
                 $('#gridName').text(gridName);
             }
 
-            function addGridItem(x, y, pluginName, serverName, graphUrl) {
-                $('#gridsContainer').append(
-                        '<div class="gridItem paper">' +
-                        '   <div class="gridItem_graph" style="background-image:url(\'' + graphUrl + '\')"></div>' +
-                        '   <div class="gridItemInfos">' +
-                        '       <div class="gridItem_pluginName">' + pluginName + '</div>' +
-                        '       <div class="gridItem_serverName">' + serverName + '</div>' +
-                        '   </div>' +
-                        '</div>');
-            }
-
             function receiveMessage(text) {
                 var jsonMessage = JSON.parse(text);
-                var gridName = jsonMessage["gridName"];
-                initGrid(gridName);
+                var action = jsonMessage['action'];
 
-                // Get GridItems
-                for (var i=0; i<jsonMessage["gridItems"].length; i++) {
-                    var gridItem = jsonMessage["gridItems"][i];
-                    var x = gridItem['x'];
-                    var y = gridItem['y'];
-                    var graphUrl = gridItem['graphUrl'];
-                    var pluginName = gridItem['pluginName'];
-                    var serverName = gridItem['serverName'];
-                    addGridItem(x, y, pluginName, serverName, graphUrl);
+                switch (action) {
+                    case 'inflate_grid':
+                        initGrid(jsonMessage["gridName"]);
+                        inflateGridItems(jsonMessage['gridItems']);
+                        break;
+                    default: break;
                 }
             }
 
-            // utility function to display the text message in the input field
-            function displayText(text) {
-                console.log(text);
-                document.getElementById("message").innerHTML=text;
-                window.castReceiverManager.setApplicationState(text);
+            function inflateGridItems(gridItems) {
+                var maxRow = getMaxRows(gridItems);
+
+                for (var y=0; y<=maxRow; y++) {
+                    var rowItems = getRowItems(gridItems, y);
+
+                    var rowHtml = '';
+                    for (var i=0; i<rowItems.length; i++)
+                        rowHtml += getGridItemHtml(rowItems[i]);
+
+                    $('#gridsContainer').append('<div class="gridItemsRow">' + rowHtml + '</div>');
+                }
+
+                fluidGrid(gridItems);
+            }
+
+            function getGridItemHtml(gridItem) {
+                return  '<div class="gridItemContainer">' +
+                        '    <div class="gridItem paper">' +
+                        '        <div class="gridItem_graph" style="background-image:url(\'' + gridItem['graphUrl'] + '\')"></div>' +
+                        '        <div class="gridItemInfos">' +
+                        '            <div class="gridItem_pluginName">' + gridItem['pluginName'] + '</div>' +
+                        '            <div class="gridItem_serverName">' + gridItem['serverName'] + '</div>' +
+                        '       </div>' +
+                        '   </div>' +
+                        '</div>';
+            }
+
+            function getMaxRows(gridItems) {
+                var maxRow = 0;
+                for (var i=0; i<gridItems.length; i++) {
+                    var y = gridItems[i]['y'];
+                    if (y > maxRow)
+                        maxRow = y;
+                }
+                return maxRow;
+            }
+
+            function getRowItems(gridItems, y) {
+                var rowItems = [];
+                for (var i=0; i<gridItems.length; i++) {
+                    if (gridItems[i]['y'] == y)
+                        rowItems[rowItems.length] = gridItems[i];
+                }
+
+                return rowItems;
+            }
+
+            function getWidestRowItemsCount(gridItems) {
+                var widestRow = -1;
+                var widestRowCount = -1;
+
+                for (var y=0; y<=getMaxRows(gridItems); y++) {
+                    var nbItems = getRowItems(gridItems, y).length;
+                    if (nbItems > widestRowCount) {
+                        widestRowCount = nbItems;
+                        widestRow = y;
+                    }
+                }
+
+                return widestRowCount;
+            }
+
+            function fluidGrid(gridItems) {
+                var gridItemsRowList = $('.gridItemsRow');
+
+                // Set gridItemContainers width
+                var gridItemMaxWidthCssAttr = $('.gridItemContainer').first().css('max-width');
+                var gridItemMaxWidth = gridItemMaxWidthCssAttr.substr(0, 3);
+                var widestRowItemsCount = getWidestRowItemsCount(gridItems);
+                var width = ($('#gridsContainer').width() - 30) / widestRowItemsCount;
+                if (width > gridItemMaxWidth)
+                    width = gridItemMaxWidth;
+                width = Math.trunc(width);
+
+                gridItemsRowList.children().css('min-width', width);
+                log('width' + width);
+
+                // Set gridItem_graphs height
+                var ratio = 497/228;
+                gridItemsRowList.each(function() {
+                    $(this).find('.gridItem_graph').each(function() {
+                        var width = $(this).width();
+                        var height = width * (1/ratio);
+                        height = Math.trunc(height);
+                        $(this).css('height', height);
+                    });
+                });
+            }
+
+            function log(msg) {
+                if (DEBUG)
+                    console.log(msg);
             }
         </script>
     </body>
