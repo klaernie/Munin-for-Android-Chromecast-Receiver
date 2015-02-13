@@ -3,6 +3,9 @@ var CHROMECAST = false;
 var DEBUG = true;
 
 window.onload = function() {
+    window.gridItems = [];
+    window.gridName = '';
+
     if (CHROMECAST) {
         cast.receiver.logger.setLevelValue(0);
         window.castReceiverManager = cast.receiver.CastReceiverManager.getInstance();
@@ -53,8 +56,9 @@ window.onload = function() {
         log('Receiver Manager started');
     } else {
         hideLoading();
-        initGrid('Grid test');
-        inflateGridItems([
+        window.gridName = 'Grid test';
+        initGrid();
+        window.gridItems = [
             {'graphUrl': 'http://demo.munin-monitoring.org/munin-cgi/munin-cgi-graph/munin-monitoring.org/demo.munin-monitoring.org/multicpu1sec-day.png',
                 'pluginName': 'multicpu1sec', 'serverName': 'demo.munin-monitoring.org', 'x': '0', 'y': '0'},
             {'graphUrl': 'http://demo.munin-monitoring.org/munin-cgi/munin-cgi-graph/munin-monitoring.org/demo.munin-monitoring.org/traffic-day.png',
@@ -69,7 +73,8 @@ window.onload = function() {
                 'pluginName': 'multicpu1sec', 'serverName': 'demo.munin-monitoring.org', 'x': '3', 'y': '1'},
             {'graphUrl': 'http://demo.munin-monitoring.org/munin-cgi/munin-cgi-graph/munin-monitoring.org/demo.munin-monitoring.org/multicpu1sec-day.png',
                 'pluginName': 'multicpu1sec', 'serverName': 'demo.munin-monitoring.org', 'x': '0', 'y': '2'}
-        ]);
+        ];
+        inflateGridItems();
     }
 };
 
@@ -79,8 +84,8 @@ function hideLoading() {
     $('#preloader').fadeOut();
 }
 
-function initGrid(gridName) {
-    $('#gridName').text(gridName);
+function initGrid() {
+    $('#gridName').text(window.gridName);
 }
 
 function receiveMessage(text) {
@@ -89,18 +94,26 @@ function receiveMessage(text) {
 
     switch (action) {
         case 'inflate_grid':
-            initGrid(jsonMessage["gridName"]);
-            inflateGridItems(jsonMessage['gridItems']);
+            window.gridName = jsonMessage['gridName'];
+            window.gridItems = jsonMessage['gridItems'];
+            initGrid();
+            inflateGridItems();
+            break;
+        case 'preview':
+            preview(jsonMessage["gridItemX"], jsonMessage['gridItemY']);
+            break;
+        case 'cancelPreview':
+            cancelPreview();
             break;
         default: break;
     }
 }
 
-function inflateGridItems(gridItems) {
-    var maxRow = getMaxRows(gridItems);
+function inflateGridItems() {
+    var maxRow = getMaxRows(window.gridItems);
 
     for (var y=0; y<=maxRow; y++) {
-        var rowItems = getRowItems(gridItems, y);
+        var rowItems = getRowItems(window.gridItems, y);
 
         var rowHtml = '';
         for (var i=0; i<rowItems.length; i++)
@@ -114,14 +127,61 @@ function inflateGridItems(gridItems) {
 
 function getGridItemHtml(gridItem) {
     return  '<div class="gridItemContainer">' +
-    '    <div class="gridItem paper">' +
-    '        <div class="gridItem_graph" style="background-image:url(\'' + gridItem['graphUrl'] + '\')"></div>' +
-    '        <div class="gridItemInfos">' +
-    '            <div class="gridItem_pluginName">' + gridItem['pluginName'] + '</div>' +
-    '            <div class="gridItem_serverName">' + gridItem['serverName'] + '</div>' +
-    '       </div>' +
-    '   </div>' +
-    '</div>';
+            '    <div class="gridItem paper">' +
+            '        <div class="gridItem_graph" style="background-image:url(\'' + gridItem['graphUrl'] + '\')"></div>' +
+            '        <div class="gridItemInfos">' +
+            '            <div class="gridItem_pluginName">' + gridItem['pluginName'] + '</div>' +
+            '            <div class="gridItem_serverName">' + gridItem['serverName'] + '</div>' +
+            '       </div>' +
+            '   </div>' +
+            '</div>';
+}
+
+function fluidGrid() {
+    var gridItemsRowList = $('.gridItemsRow');
+
+    // Set gridItemContainers width
+    var gridItemMaxWidthCssAttr = $('.gridItemContainer').first().css('max-width');
+    var gridItemMaxWidth = gridItemMaxWidthCssAttr.substr(0, 3);
+    var widestRowItemsCount = getWidestRowItemsCount(window.gridItems);
+    var width = ($('#gridsContainer').width() - 30) / widestRowItemsCount;
+    if (width > gridItemMaxWidth)
+        width = gridItemMaxWidth;
+    width = Math.trunc(width);
+
+    gridItemsRowList.children().css('min-width', width);
+
+    // Set gridItem_graphs height
+    var ratio = 497/228;
+    gridItemsRowList.each(function() {
+        $(this).find('.gridItem_graph').each(function() {
+            var width = $(this).width();
+            var height = width * (1/ratio);
+            height = Math.trunc(height);
+            $(this).css('height', height);
+        });
+    });
+}
+
+function preview(x, y) {
+    var gridItem = getGridItem(window.gridItems, x, y);
+    $('.card-pluginName').text(gridItem['pluginName']);
+    $('.card-serverName').text(gridItem['serverName']);
+    $('#card-graph').attr('src', gridItem['graphUrl']);
+    $('#fullscreen').show();
+}
+function cancelPreview() {
+    $('.card-pluginName').text('');
+    $('.card-serverName').text('');
+    $('#card-graph').attr('src', '');
+    $('#fullscreen').hide();
+}
+
+
+/* STATIC FUNCTIONS */
+function log(msg) {
+    if (DEBUG)
+        console.log(msg);
 }
 
 function getMaxRows(gridItems) {
@@ -132,6 +192,14 @@ function getMaxRows(gridItems) {
             maxRow = y;
     }
     return maxRow;
+}
+
+function getGridItem(gridItems, x, y) {
+    for (var i=0; i<gridItems.length; i++) {
+        if (gridItems[i]['x'] == x && gridItems[i]['y'] == y)
+            return gridItems[i];
+    }
+    return null;
 }
 
 function getRowItems(gridItems, y) {
@@ -157,42 +225,4 @@ function getWidestRowItemsCount(gridItems) {
     }
 
     return widestRowCount;
-}
-
-function fluidGrid(gridItems) {
-    var gridItemsRowList = $('.gridItemsRow');
-
-    // Set gridItemContainers width
-    var gridItemMaxWidthCssAttr = $('.gridItemContainer').first().css('max-width');
-    var gridItemMaxWidth = gridItemMaxWidthCssAttr.substr(0, 3);
-    var widestRowItemsCount = getWidestRowItemsCount(gridItems);
-    var width = ($('#gridsContainer').width() - 30) / widestRowItemsCount;
-    if (width > gridItemMaxWidth)
-        width = gridItemMaxWidth;
-    width = Math.trunc(width);
-
-    gridItemsRowList.children().css('min-width', width);
-
-    // Set gridItem_graphs height
-    var ratio = 497/228;
-    gridItemsRowList.each(function() {
-        $(this).find('.gridItem_graph').each(function() {
-            var width = $(this).width();
-            var height = width * (1/ratio);
-            height = Math.trunc(height);
-            $(this).css('height', height);
-        });
-    });
-}
-
-function preview(graphUrl, pluginName, serverName) {
-    $('.card-pluginName').text(pluginName);
-    $('.card-serverName').text(serverName);
-    $('#card-graph').attr('src', graphUrl);
-    $('#fullscreen').show();
-}
-
-function log(msg) {
-    if (DEBUG)
-        console.log(msg);
 }
