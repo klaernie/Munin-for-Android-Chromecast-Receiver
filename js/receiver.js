@@ -1,5 +1,5 @@
 // Set CHROMECAST to false when debugging on a web browser
-var CHROMECAST = true;
+var CHROMECAST = false;
 // DEBUG=false: disable logging
 var DEBUG = true;
 
@@ -80,7 +80,6 @@ window.onload = function() {
 };
 
 function hideLoading() {
-    stopAnimation();
     $('#loaderImage').hide();
     $('#preloader').fadeOut();
 }

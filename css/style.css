@@ -107,10 +107,9 @@ body {
 }
 .fullscreenCard {
     width: 497px;
-    margin: auto;
+    margin: -200px auto 0 auto;
     position: relative;
     top: 50%;
-    margin-top: -100px;
     background-color: #fff;
 }
 .fullscreenCard > img {
@@ -170,11 +169,4 @@ body {
 }
 .preloader span {
     font-weight: 300;
-}
-#loaderImage {
-    position: fixed;
-    z-index: 1;
-    bottom: 50px;
-    left: 50%;
-    margin-left: -32px;
 }
