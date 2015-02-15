@@ -131,8 +131,8 @@ function inflateGridItems() {
 function refreshGridItems() {
     for (var i=0; i<window.gridItems.length; i++) {
         var gridItem = window.gridItems[i];
-        var graphUrl = getCacheProofGraphUrl(gridItem['graphUrl']);
-        $("[data-x='" + gridItem['x'] + "'][data-y='" + gridItem['y'] + "']").css('background-image', 'url(\'' + graphUrl + '\')');
+        var graphUrl = getCacheProofGraphUrl(gridItem.graphUrl);
+        $("[data-x='" + gridItem.x + "'][data-y='" + gridItem.y + "']").css('background-image', 'url(\'' + graphUrl + '\')');
     }
 }
 
@@ -140,12 +140,12 @@ function getGridItemHtml(gridItem) {
     return  '<div class="gridItemContainer">' +
             '    <div class="gridItem paper">' +
             '        <div class="gridItem_graph"' +
-            '           data-x="' + gridItem['x'] + '"' +
-            '           data-y="' + gridItem['y'] + '"' +
-            '           style="background-image:url(\'' + getCacheProofGraphUrl(gridItem['graphUrl']) + '\')"></div>' +
+            '           data-x="' + gridItem.x + '"' +
+            '           data-y="' + gridItem.y + '"' +
+            '           style="background-image:url(\'' + getCacheProofGraphUrl(gridItem.graphUrl) + '\')"></div>' +
             '        <div class="gridItemInfos">' +
-            '            <div class="gridItem_pluginName">' + gridItem['pluginName'] + '</div>' +
-            '            <div class="gridItem_serverName">' + gridItem['serverName'] + '</div>' +
+            '            <div class="gridItem_pluginName">' + gridItem.pluginName + '</div>' +
+            '            <div class="gridItem_serverName">' + gridItem.serverName + '</div>' +
             '       </div>' +
             '   </div>' +
             '</div>';
@@ -190,10 +190,10 @@ function preview(x, y) {
     if (gridItem == null)
         return;
 
-    $('.card-pluginName').text(gridItem['pluginName']);
-    $('.card-serverName').text(gridItem['serverName']);
+    $('.card-pluginName').text(gridItem.pluginName);
+    $('.card-serverName').text(gridItem.serverName);
     // Find currently displayed graph source (try to get image from cache)
-    var graphUrl = $("[data-x='" + gridItem['x'] + "'][data-y='" + gridItem['y'] + "']").css('background-image');
+    var graphUrl = $("[data-x='" + gridItem.x + "'][data-y='" + gridItem.y + "']").css('background-image');
     // Get # from url('#')
     graphUrl = graphUrl.substr("url('".length-1, graphUrl.length);
     graphUrl = graphUrl.substr(0, graphUrl.length - "')".length-1);
@@ -217,7 +217,7 @@ function log(msg) {
 function getMaxRows(gridItems) {
     var maxRow = 0;
     for (var i=0; i<gridItems.length; i++) {
-        var y = gridItems[i]['y'];
+        var y = gridItems[i].y;
         if (y > maxRow)
             maxRow = y;
     }
@@ -226,7 +226,7 @@ function getMaxRows(gridItems) {
 
 function getGridItem(gridItems, x, y) {
     for (var i=0; i<gridItems.length; i++) {
-        if (gridItems[i]['x'] == x && gridItems[i]['y'] == y)
+        if (gridItems[i].x == x && gridItems[i].y == y)
             return gridItems[i];
     }
     return null;
@@ -235,7 +235,7 @@ function getGridItem(gridItems, x, y) {
 function getRowItems(gridItems, y) {
     var rowItems = [];
     for (var i=0; i<gridItems.length; i++) {
-        if (gridItems[i]['y'] == y)
+        if (gridItems[i].y == y)
             rowItems[rowItems.length] = gridItems[i];
     }
 
