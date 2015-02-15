@@ -1,4 +1,4 @@
-// Set CHROMECAST to false when debugging on a web browser
+// Set CHROMECAST to false when debugging in a web browser
 var CHROMECAST = false;
 // DEBUG=false: disable logging
 var DEBUG = true;
@@ -102,7 +102,7 @@ function receiveMessage(text) {
         case 'preview':
             preview(jsonMessage["x"], jsonMessage['y']);
             break;
-        case 'cancelPreview':
+        case 'cancelpreview':
             cancelPreview();
             break;
         case 'refresh':
@@ -186,9 +186,18 @@ function fluidGrid() {
 
 function preview(x, y) {
     var gridItem = getGridItem(window.gridItems, x, y);
+
+    if (gridItem == null)
+        return;
+
     $('.card-pluginName').text(gridItem['pluginName']);
     $('.card-serverName').text(gridItem['serverName']);
-    $('#card-graph').attr('src', gridItem['graphUrl']);
+    // Find currently displayed graph source (try to get image from cache)
+    var graphUrl = $("[data-x='" + gridItem['x'] + "'][data-y='" + gridItem['y'] + "']").css('background-image');
+    // Get # from url('#')
+    graphUrl = graphUrl.substr("url('".length-1, graphUrl.length);
+    graphUrl = graphUrl.substr(0, graphUrl.length - "')".length-1);
+    $('#card-graph').attr('src', graphUrl);
     $('#fullscreen').show();
 }
 function cancelPreview() {
