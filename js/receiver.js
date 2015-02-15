@@ -1,5 +1,6 @@
 // Set CHROMECAST to false when debugging on a web browser
-var CHROMECAST = false;
+var CHROMECAST = true;
+// DEBUG=false: disable logging
 var DEBUG = true;
 
 window.onload = function() {
@@ -100,7 +101,7 @@ function receiveMessage(text) {
             inflateGridItems();
             break;
         case 'preview':
-            preview(jsonMessage["gridItemX"], jsonMessage['gridItemY']);
+            preview(jsonMessage["x"], jsonMessage['y']);
             break;
         case 'cancelPreview':
             cancelPreview();

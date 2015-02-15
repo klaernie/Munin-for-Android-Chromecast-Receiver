@@ -36,15 +36,18 @@ body {
     width: 56px;
 }
 .gridName {
-    display: inline-block;
     margin: 0;
     padding: 0;
     text-align: center;
     text-transform: uppercase;
     color: #efefef;
     text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.5);
-    margin-left: 200px;
     font-size: 23px;
+    display: block;
+    position: fixed;
+    top: 20px;
+    left: 0;
+    width: 100%;
 }
 .gridsContainer {
     padding: 30px 0;
