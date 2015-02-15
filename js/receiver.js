@@ -105,6 +105,9 @@ function receiveMessage(text) {
         case 'cancelPreview':
             cancelPreview();
             break;
+        case 'refresh':
+            refreshGridItems();
+            break;
         default: break;
     }
 }
@@ -125,16 +128,34 @@ function inflateGridItems() {
     fluidGrid(gridItems);
 }
 
+function refreshGridItems() {
+    for (var i=0; i<window.gridItems.length; i++) {
+        var gridItem = window.gridItems[i];
+        var graphUrl = getCacheProofGraphUrl(gridItem['graphUrl']);
+        $("[data-x='" + gridItem['x'] + "'][data-y='" + gridItem['y'] + "']").css('background-image', 'url(\'' + graphUrl + '\')');
+    }
+}
+
 function getGridItemHtml(gridItem) {
     return  '<div class="gridItemContainer">' +
             '    <div class="gridItem paper">' +
-            '        <div class="gridItem_graph" style="background-image:url(\'' + gridItem['graphUrl'] + '\')"></div>' +
+            '        <div class="gridItem_graph"' +
+            '           data-x="' + gridItem['x'] + '"' +
+            '           data-y="' + gridItem['y'] + '"' +
+            '           style="background-image:url(\'' + getCacheProofGraphUrl(gridItem['graphUrl']) + '\')"></div>' +
             '        <div class="gridItemInfos">' +
             '            <div class="gridItem_pluginName">' + gridItem['pluginName'] + '</div>' +
             '            <div class="gridItem_serverName">' + gridItem['serverName'] + '</div>' +
             '       </div>' +
             '   </div>' +
             '</div>';
+}
+
+/**
+ * Appends current time to requested URL in order to avoid receiving a cached version of the image
+ */
+function getCacheProofGraphUrl(graphUrl) {
+    return graphUrl + '?' + new Date().getTime();
 }
 
 function fluidGrid() {
