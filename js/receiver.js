@@ -3,9 +3,17 @@ var CHROMECAST = false;
 // DEBUG=false: disable logging
 var DEBUG = true;
 
+PeriodEnum = {
+    DAY: { val: 'day' },
+    WEEK: { val: 'week' },
+    MONTH: { val: 'month' },
+    YEAR: { val: 'year' }
+};
+
 window.onload = function() {
     window.gridItems = [];
     window.gridName = '';
+    window.currentPeriod = PeriodEnum.DAY;
 
     if (CHROMECAST) {
         cast.receiver.logger.setLevelValue(0);
@@ -60,19 +68,19 @@ window.onload = function() {
         window.gridName = 'Grid test';
         initGrid();
         window.gridItems = [
-            {'graphUrl': 'http://demo.munin-monitoring.org/munin-cgi/munin-cgi-graph/munin-monitoring.org/demo.munin-monitoring.org/multicpu1sec-day.png',
+            {'graphUrl': 'http://demo.munin-monitoring.org/munin-cgi/munin-cgi-graph/munin-monitoring.org/demo.munin-monitoring.org/multicpu1sec-{period].png',
                 'pluginName': 'multicpu1sec', 'serverName': 'demo.munin-monitoring.org', 'x': '0', 'y': '0'},
-            {'graphUrl': 'http://demo.munin-monitoring.org/munin-cgi/munin-cgi-graph/munin-monitoring.org/demo.munin-monitoring.org/traffic-day.png',
+            {'graphUrl': 'http://demo.munin-monitoring.org/munin-cgi/munin-cgi-graph/munin-monitoring.org/demo.munin-monitoring.org/traffic-{period].png',
                 'pluginName': 'Traffic per interface', 'serverName': 'demo.munin-monitoring.org', 'x': '1', 'y': '0'},
-            {'graphUrl': 'http://demo.munin-monitoring.org/munin-cgi/munin-cgi-graph/munin-monitoring.org/demo.munin-monitoring.org/cpu-day.png',
+            {'graphUrl': 'http://demo.munin-monitoring.org/munin-cgi/munin-cgi-graph/munin-monitoring.org/demo.munin-monitoring.org/cpu-{period].png',
                 'pluginName': 'CPU usage', 'serverName': 'demo.munin-monitoring.org', 'x': '2', 'y': '0'},
-            {'graphUrl': 'http://demo.munin-monitoring.org/munin-cgi/munin-cgi-graph/munin-monitoring.org/demo.munin-monitoring.org/multicpu1sec-day.png',
+            {'graphUrl': 'http://demo.munin-monitoring.org/munin-cgi/munin-cgi-graph/munin-monitoring.org/demo.munin-monitoring.org/multicpu1sec-{period].png',
                 'pluginName': 'multicpu1sec', 'serverName': 'demo.munin-monitoring.org', 'x': '0', 'y': '1'},
-            {'graphUrl': 'http://demo.munin-monitoring.org/munin-cgi/munin-cgi-graph/munin-monitoring.org/demo.munin-monitoring.org/multicpu1sec-day.png',
+            {'graphUrl': 'http://demo.munin-monitoring.org/munin-cgi/munin-cgi-graph/munin-monitoring.org/demo.munin-monitoring.org/multicpu1sec-{period].png',
                 'pluginName': 'multicpu1sec', 'serverName': 'demo.munin-monitoring.org', 'x': '2', 'y': '1'},
-            {'graphUrl': 'http://demo.munin-monitoring.org/munin-cgi/munin-cgi-graph/munin-monitoring.org/demo.munin-monitoring.org/multicpu1sec-day.png',
+            {'graphUrl': 'http://demo.munin-monitoring.org/munin-cgi/munin-cgi-graph/munin-monitoring.org/demo.munin-monitoring.org/multicpu1sec-{period].png',
                 'pluginName': 'multicpu1sec', 'serverName': 'demo.munin-monitoring.org', 'x': '3', 'y': '1'},
-            {'graphUrl': 'http://demo.munin-monitoring.org/munin-cgi/munin-cgi-graph/munin-monitoring.org/demo.munin-monitoring.org/multicpu1sec-day.png',
+            {'graphUrl': 'http://demo.munin-monitoring.org/munin-cgi/munin-cgi-graph/munin-monitoring.org/demo.munin-monitoring.org/multicpu1sec-{period].png',
                 'pluginName': 'multicpu1sec', 'serverName': 'demo.munin-monitoring.org', 'x': '0', 'y': '2'}
         ];
         inflateGridItems();
@@ -95,6 +103,7 @@ function receiveMessage(text) {
         case 'inflate_grid':
             window.gridName = jsonMessage['gridName'];
             window.gridItems = jsonMessage['gridItems'];
+            window.currentPeriod = getPeriod(jsonMessage['period']);
             initGrid();
             inflateGridItems();
             break;
@@ -107,7 +116,19 @@ function receiveMessage(text) {
         case 'refresh':
             refreshGridItems();
             break;
+        case 'changePeriod':
+            window.currentPeriod = getPeriod(jsonMessage['period']);
+            break;
         default: break;
+    }
+}
+
+function getPeriod(period) {
+    switch (period) {
+        case 'DAY': return Period.DAY; break;
+        case 'WEEK': return Period.WEEK; break;
+        case 'MONTH': return Period.MONTH; break;
+        case 'YEAR': return Period.YEAR; break;
     }
 }
 
@@ -130,7 +151,7 @@ function inflateGridItems() {
 function refreshGridItems() {
     for (var i=0; i<window.gridItems.length; i++) {
         var gridItem = window.gridItems[i];
-        var graphUrl = getCacheProofGraphUrl(gridItem.graphUrl);
+        var graphUrl = getCacheProofGraphUrl(gridItem);
         $("[data-x='" + gridItem.x + "'][data-y='" + gridItem.y + "']").css('background-image', 'url(\'' + graphUrl + '\')');
     }
 }
@@ -141,7 +162,7 @@ function getGridItemHtml(gridItem) {
             '        <div class="gridItem_graph"' +
             '           data-x="' + gridItem.x + '"' +
             '           data-y="' + gridItem.y + '"' +
-            '           style="background-image:url(\'' + getCacheProofGraphUrl(gridItem.graphUrl) + '\')"></div>' +
+            '           style="background-image:url(\'' + getCacheProofGraphUrl(gridItem) + '\')"></div>' +
             '        <div class="gridItemInfos">' +
             '            <div class="gridItem_pluginName">' + gridItem.pluginName + '</div>' +
             '            <div class="gridItem_serverName">' + gridItem.serverName + '</div>' +
@@ -153,8 +174,9 @@ function getGridItemHtml(gridItem) {
 /**
  * Appends current time to requested URL in order to avoid receiving a cached version of the image
  */
-function getCacheProofGraphUrl(graphUrl) {
-    return graphUrl + '?' + new Date().getTime();
+function getCacheProofGraphUrl(gridItem) {
+    var graphUrl = gridItem.graphUrl + '?' + new Date().getTime();
+    return graphUrl.replace('{period}', window.currentPeriod.val);
 }
 
 function fluidGrid() {
