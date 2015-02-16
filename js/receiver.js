@@ -1,5 +1,5 @@
 // Set CHROMECAST to false when debugging in a web browser
-var CHROMECAST = false;
+var CHROMECAST = true;
 // DEBUG=false: disable logging
 var DEBUG = true;
 
@@ -273,9 +273,10 @@ function getWidestRowItemsCount(gridItems) {
 
 function getPeriod(period) {
     switch (period) {
-        case 'DAY': return Period.DAY; break;
-        case 'WEEK': return Period.WEEK; break;
-        case 'MONTH': return Period.MONTH; break;
-        case 'YEAR': return Period.YEAR; break;
+        case 'DAY': return PeriodEnum.DAY; break;
+        case 'WEEK': return PeriodEnum.WEEK; break;
+        case 'MONTH': return PeriodEnum.MONTH; break;
+        case 'YEAR': return PeriodEnum.YEAR; break;
+        default: return PeriodEnum.DAY; break;
     }
 }
