@@ -118,17 +118,9 @@ function receiveMessage(text) {
             break;
         case 'changePeriod':
             window.currentPeriod = getPeriod(jsonMessage['period']);
+            refreshGridItems();
             break;
         default: break;
-    }
-}
-
-function getPeriod(period) {
-    switch (period) {
-        case 'DAY': return Period.DAY; break;
-        case 'WEEK': return Period.WEEK; break;
-        case 'MONTH': return Period.MONTH; break;
-        case 'YEAR': return Period.YEAR; break;
     }
 }
 
@@ -173,6 +165,7 @@ function getGridItemHtml(gridItem) {
 
 /**
  * Appends current time to requested URL in order to avoid receiving a cached version of the image
+ *  Also, replace {period} in /multicpu1sec-{period}.png by the current period (day/week/month/year)
  */
 function getCacheProofGraphUrl(gridItem) {
     var graphUrl = gridItem.graphUrl + '?' + new Date().getTime();
@@ -276,4 +269,13 @@ function getWidestRowItemsCount(gridItems) {
     }
 
     return widestRowCount;
+}
+
+function getPeriod(period) {
+    switch (period) {
+        case 'DAY': return Period.DAY; break;
+        case 'WEEK': return Period.WEEK; break;
+        case 'MONTH': return Period.MONTH; break;
+        case 'YEAR': return Period.YEAR; break;
+    }
 }
