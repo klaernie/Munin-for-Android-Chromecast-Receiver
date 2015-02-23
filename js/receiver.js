@@ -173,6 +173,9 @@ function getCacheProofGraphUrl(gridItem) {
 }
 
 function fluidGrid() {
+    if (window.gridItems.length == 0)
+        return;
+
     var gridItemsRowList = $('.gridItemsRow');
 
     // Set gridItemContainers width
