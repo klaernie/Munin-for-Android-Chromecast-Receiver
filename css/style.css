@@ -77,6 +77,14 @@ body {
     box-sizing: border-box;
     border-top-left-radius: 3px;
     border-top-right-radius: 3px;
+    position: relative;
+}
+.gridItem_graph > img {
+    position: absolute;
+    top: 50%;
+    margin-top: -32px;
+    left: 50%;
+    margin-left: -32px;
 }
 .gridItemInfos {
     background: #f0f0f0;

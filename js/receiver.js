@@ -1,7 +1,13 @@
 // Public page URL: https://googledrive.com/host/0B8ROEJR_hqFufi1TcHZMVUdPN18xbFAzeE5hNVdlNWlpRnQwV3VicnNFS3Q2VUEzNkpXNms/
+/*
+ * About loading images :
+ *  On servers protected by Apache Basic/Digest Auth, we can't fetch the graphs chromecast-side.
+ *  So GridItems related with those servers will receive a base64-encoded graphs from the device.
+ *  With standard servers, the Chromecast will still download bitmaps as usual.
+ */
 
 // Set CHROMECAST to false when debugging in a web browser
-var CHROMECAST = true;
+var CHROMECAST = false;
 // DEBUG=false: disable logging
 var DEBUG = true;
 
@@ -71,21 +77,27 @@ window.onload = function() {
         initGrid();
         window.gridItems = [
             {'graphUrl': 'http://demo.munin-monitoring.org/munin-cgi/munin-cgi-graph/munin-monitoring.org/demo.munin-monitoring.org/multicpu1sec-{period}.png',
-                'pluginName': 'multicpu1sec', 'serverName': 'demo.munin-monitoring.org', 'x': '0', 'y': '0'},
-            {'graphUrl': 'http://demo.munin-monitoring.org/munin-cgi/munin-cgi-graph/munin-monitoring.org/demo.munin-monitoring.org/traffic-{period}.png',
-                'pluginName': 'Traffic per interface', 'serverName': 'demo.munin-monitoring.org', 'x': '1', 'y': '0'},
-            {'graphUrl': 'http://demo.munin-monitoring.org/munin-cgi/munin-cgi-graph/munin-monitoring.org/demo.munin-monitoring.org/cpu-{period}.png',
-                'pluginName': 'CPU usage', 'serverName': 'demo.munin-monitoring.org', 'x': '2', 'y': '0'},
+                'pluginName': 'multicpu1sec', 'serverName': 'demo.munin-monitoring.org', 'x': '0', 'y': '0',
+                'masterName': 'munin-monitoring.org', 'authType': 'none'},
             {'graphUrl': 'http://demo.munin-monitoring.org/munin-cgi/munin-cgi-graph/munin-monitoring.org/demo.munin-monitoring.org/multicpu1sec-{period}.png',
-                'pluginName': 'multicpu1sec', 'serverName': 'demo.munin-monitoring.org', 'x': '0', 'y': '1'},
-            {'graphUrl': 'http://demo.munin-monitoring.org/munin-cgi/munin-cgi-graph/munin-monitoring.org/demo.munin-monitoring.org/multicpu1sec-{period}.png',
-                'pluginName': 'multicpu1sec', 'serverName': 'demo.munin-monitoring.org', 'x': '2', 'y': '1'},
-            {'graphUrl': 'http://demo.munin-monitoring.org/munin-cgi/munin-cgi-graph/munin-monitoring.org/demo.munin-monitoring.org/multicpu1sec-{period}.png',
-                'pluginName': 'multicpu1sec', 'serverName': 'demo.munin-monitoring.org', 'x': '3', 'y': '1'},
-            {'graphUrl': 'http://demo.munin-monitoring.org/munin-cgi/munin-cgi-graph/munin-monitoring.org/demo.munin-monitoring.org/multicpu1sec-{period}.png',
-                'pluginName': 'multicpu1sec', 'serverName': 'demo.munin-monitoring.org', 'x': '0', 'y': '2'}
+                'pluginName': 'Traffic per interface', 'serverName': 'demo.munin-monitoring.org', 'x': '1', 'y': '0',
+                'masterName': 'munin-monitoring.org', 'authType': 'none'},
+            {'pluginName': 'CPU usage', 'serverName': 'demo.munin-monitoring.org', 'x': '2', 'y': '0',
+                'masterName': 'munin-monitoring.org', 'authType': 'BASIC'},
+            {'pluginName': 'multicpu1sec', 'serverName': 'demo.munin-monitoring.org', 'x': '0', 'y': '1',
+                'masterName': 'munin-monitoring.org', 'authType': 'BASIC'},
+            {'pluginName': 'multicpu1sec', 'serverName': 'demo.munin-monitoring.org', 'x': '2', 'y': '1',
+                'masterName': 'munin-monitoring.org', 'authType': 'BASIC'},
+            {'pluginName': 'multicpu1sec', 'serverName': 'demo.munin-monitoring.org', 'x': '3', 'y': '1',
+                'masterName': 'munin-monitoring.org', 'authType': 'BASIC'},
+            {'pluginName': 'multicpu1sec', 'serverName': 'demo.munin-monitoring.org', 'x': '0', 'y': '2',
+                'masterName': 'munin-monitoring.org', 'authType': 'BASIC'}
         ];
+
         inflateGridItems();
+
+        $('.gridItem_graph').css('background-image', 'url(data:image/png;base64,'+base64Sample + ')');
+        $('.gridItem_loading').hide();
     }
 };
 
@@ -109,16 +121,23 @@ function receiveMessage(text) {
             initGrid();
             inflateGridItems();
             break;
+        case 'send_graph':
+            var base64Image = jsonMessage['base64Image'];
+            var graphDiv = $("[data-x='" + jsonMessage['x'] + "'][data-y='" + jsonMessage['y'] + "']");
+            graphDiv.css('background-image', 'data:image/png;base64,' + base64Image);
+            // Hide loading gif
+            graphDiv.find('img').hide();
+            break;
         case 'preview':
             preview(jsonMessage["x"], jsonMessage['y']);
             break;
-        case 'cancelpreview':
+        case 'cancel_preview':
             cancelPreview();
             break;
         case 'refresh':
             refreshGridItems();
             break;
-        case 'changePeriod':
+        case 'change_period':
             window.currentPeriod = getPeriod(jsonMessage['period']);
             refreshGridItems();
             break;
@@ -142,36 +161,26 @@ function inflateGridItems() {
     fluidGrid(gridItems);
 }
 
-function refreshGridItems() {
-    for (var i=0; i<window.gridItems.length; i++) {
-        var gridItem = window.gridItems[i];
-        var graphUrl = getCacheProofGraphUrl(gridItem);
-        $("[data-x='" + gridItem.x + "'][data-y='" + gridItem.y + "']").css('background-image', 'url(\'' + graphUrl + '\')');
-    }
-}
-
 function getGridItemHtml(gridItem) {
+    var hasAuth = gridItem.authType == 'BASIC' || gridItem.authType == 'DIGEST';
+    var backgroundImage = hasAuth ? 'none' : 'url(\'' + getCacheProofGraphUrl(gridItem) + '\');';
+
     return  '<div class="gridItemContainer">' +
             '    <div class="gridItem paper">' +
             '        <div class="gridItem_graph"' +
             '           data-x="' + gridItem.x + '"' +
             '           data-y="' + gridItem.y + '"' +
-            '           style="background-image:url(\'' + getCacheProofGraphUrl(gridItem) + '\')"></div>' +
+            '           style="background-image:' + backgroundImage + ';">' +
+        (hasAuth ?
+            '           <img src="img/loading.gif" class="gridItem_loading" />'
+        : '') +
+            '        </div>' +
             '        <div class="gridItemInfos">' +
             '            <div class="gridItem_pluginName">' + gridItem.pluginName + '</div>' +
-            '            <div class="gridItem_serverName">' + gridItem.serverName + '</div>' +
+            '            <div class="gridItem_serverName">' + gridItem.masterName + ' &bullet; ' + gridItem.serverName + '</div>' +
             '       </div>' +
             '   </div>' +
             '</div>';
-}
-
-/**
- * Appends current time to requested URL in order to avoid receiving a cached version of the image
- *  Also, replace {period} in /multicpu1sec-{period}.png by the current period (day/week/month/year)
- */
-function getCacheProofGraphUrl(gridItem) {
-    var graphUrl = gridItem.graphUrl + '?' + new Date().getTime();
-    return graphUrl.replace('{period}', window.currentPeriod.val);
 }
 
 function fluidGrid() {
@@ -203,7 +212,31 @@ function fluidGrid() {
     });
 }
 
+function refreshGridItems() {
+    for (var i=0; i<window.gridItems.length; i++) {
+        var gridItem = window.gridItems[i];
+        if (gridItem.authType == 'BASIC' || gridItem.authType == 'DIGEST') {
+            // We'll receive base64 encoded image in a future and separate message
+        } else {
+            var graphUrl = getCacheProofGraphUrl(gridItem);
+            $("[data-x='" + gridItem.x + "'][data-y='" + gridItem.y + "']").css('background-image', 'url(\'' + graphUrl + '\')');
+        }
+    }
+}
+
+
+/**
+ * Appends current time to requested URL in order to avoid receiving a cached version of the image
+ *  Also, replace {period} in /multicpu1sec-{period}.png by the current period (day/week/month/year)
+ */
+function getCacheProofGraphUrl(gridItem) {
+    var graphUrl = gridItem.graphUrl + '?' + new Date().getTime();
+    return graphUrl.replace('{period}', window.currentPeriod.val);
+}
+
+
 function preview(x, y) {
+    // TODO
     var gridItem = getGridItem(window.gridItems, x, y);
 
     if (gridItem == null)
