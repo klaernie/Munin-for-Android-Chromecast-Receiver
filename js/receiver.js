@@ -7,7 +7,7 @@
  */
 
 // Set CHROMECAST to false when debugging in a web browser
-var CHROMECAST = false;
+var CHROMECAST = true;
 // DEBUG=false: disable logging
 var DEBUG = true;
 
@@ -146,6 +146,9 @@ function receiveMessage(text) {
 }
 
 function inflateGridItems() {
+    var gridsContainer = $('#gridsContainer');
+    gridsContainer.html('');
+
     var maxRow = getMaxRows(window.gridItems);
 
     for (var y=0; y<=maxRow; y++) {
@@ -155,7 +158,7 @@ function inflateGridItems() {
         for (var i=0; i<rowItems.length; i++)
             rowHtml += getGridItemHtml(rowItems[i]);
 
-        $('#gridsContainer').append('<div class="gridItemsRow">' + rowHtml + '</div>');
+        gridsContainer.append('<div class="gridItemsRow">' + rowHtml + '</div>');
     }
 
     fluidGrid(gridItems);
