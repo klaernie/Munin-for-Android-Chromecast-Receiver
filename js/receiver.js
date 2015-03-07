@@ -1,10 +1,4 @@
 // Public page URL: https://googledrive.com/host/0B8ROEJR_hqFufi1TcHZMVUdPN18xbFAzeE5hNVdlNWlpRnQwV3VicnNFS3Q2VUEzNkpXNms/
-/*
- * About loading images :
- *  On servers protected by Apache Basic/Digest Auth, we can't fetch the graphs chromecast-side.
- *  So GridItems related with those servers will receive a base64-encoded graphs from the device.
- *  With standard servers, the Chromecast will still download bitmaps as usual.
- */
 
 // Set CHROMECAST to false when debugging in a web browser
 var CHROMECAST = true;
@@ -78,26 +72,28 @@ window.onload = function() {
         window.gridItems = [
             {'graphUrl': 'http://demo.munin-monitoring.org/munin-cgi/munin-cgi-graph/munin-monitoring.org/demo.munin-monitoring.org/multicpu1sec-{period}.png',
                 'pluginName': 'multicpu1sec', 'serverName': 'demo.munin-monitoring.org', 'x': '0', 'y': '0',
-                'masterName': 'munin-monitoring.org', 'authType': 'none'},
+                'masterName': 'munin-monitoring.org'},
             {'graphUrl': 'http://demo.munin-monitoring.org/munin-cgi/munin-cgi-graph/munin-monitoring.org/demo.munin-monitoring.org/multicpu1sec-{period}.png',
                 'pluginName': 'Traffic per interface', 'serverName': 'demo.munin-monitoring.org', 'x': '1', 'y': '0',
-                'masterName': 'munin-monitoring.org', 'authType': 'none'},
-            {'pluginName': 'CPU usage', 'serverName': 'demo.munin-monitoring.org', 'x': '2', 'y': '0',
-                'masterName': 'munin-monitoring.org', 'authType': 'BASIC'},
-            {'pluginName': 'multicpu1sec', 'serverName': 'demo.munin-monitoring.org', 'x': '0', 'y': '1',
-                'masterName': 'munin-monitoring.org', 'authType': 'BASIC'},
-            {'pluginName': 'multicpu1sec', 'serverName': 'demo.munin-monitoring.org', 'x': '2', 'y': '1',
-                'masterName': 'munin-monitoring.org', 'authType': 'BASIC'},
-            {'pluginName': 'multicpu1sec', 'serverName': 'demo.munin-monitoring.org', 'x': '3', 'y': '1',
-                'masterName': 'munin-monitoring.org', 'authType': 'BASIC'},
-            {'pluginName': 'multicpu1sec', 'serverName': 'demo.munin-monitoring.org', 'x': '0', 'y': '2',
-                'masterName': 'munin-monitoring.org', 'authType': 'BASIC'}
+                'masterName': 'munin-monitoring.org'},
+            {'graphUrl': 'http://demo.munin-monitoring.org/munin-cgi/munin-cgi-graph/munin-monitoring.org/demo.munin-monitoring.org/multicpu1sec-{period}.png',
+                'pluginName': 'CPU usage', 'serverName': 'demo.munin-monitoring.org', 'x': '2', 'y': '0',
+                'masterName': 'munin-monitoring.org'},
+            {'graphUrl': 'http://demo.munin-monitoring.org/munin-cgi/munin-cgi-graph/munin-monitoring.org/demo.munin-monitoring.org/multicpu1sec-{period}.png',
+                'pluginName': 'multicpu1sec', 'serverName': 'demo.munin-monitoring.org', 'x': '0', 'y': '1',
+                'masterName': 'munin-monitoring.org'},
+            {'graphUrl': 'http://demo.munin-monitoring.org/munin-cgi/munin-cgi-graph/munin-monitoring.org/demo.munin-monitoring.org/multicpu1sec-{period}.png',
+                'pluginName': 'multicpu1sec', 'serverName': 'demo.munin-monitoring.org', 'x': '2', 'y': '1',
+                'masterName': 'munin-monitoring.org'},
+            {'graphUrl': 'http://demo.munin-monitoring.org/munin-cgi/munin-cgi-graph/munin-monitoring.org/demo.munin-monitoring.org/multicpu1sec-{period}.png',
+                'pluginName': 'multicpu1sec', 'serverName': 'demo.munin-monitoring.org', 'x': '3', 'y': '1',
+                'masterName': 'munin-monitoring.org'},
+            {'graphUrl': 'http://demo.munin-monitoring.org/munin-cgi/munin-cgi-graph/munin-monitoring.org/demo.munin-monitoring.org/multicpu1sec-{period}.png',
+                'pluginName': 'multicpu1sec', 'serverName': 'demo.munin-monitoring.org', 'x': '0', 'y': '2',
+                'masterName': 'munin-monitoring.org'}
         ];
 
         inflateGridItems();
-
-        $('.gridItem_graph').css('background-image', 'url(data:image/png;base64,'+base64Sample + ')');
-        $('.gridItem_loading').hide();
     }
 };
 
@@ -120,13 +116,6 @@ function receiveMessage(text) {
             window.currentPeriod = getPeriod(jsonMessage['period']);
             initGrid();
             inflateGridItems();
-            break;
-        case 'send_graph':
-            var base64Image = jsonMessage['base64Image'];
-            var graphDiv = $("[data-x='" + jsonMessage['x'] + "'][data-y='" + jsonMessage['y'] + "']");
-            graphDiv.css('background-image', 'data:image/png;base64,' + base64Image);
-            // Hide loading gif
-            graphDiv.find('img').hide();
             break;
         case 'preview':
             preview(jsonMessage["x"], jsonMessage['y']);
@@ -161,22 +150,16 @@ function inflateGridItems() {
         gridsContainer.append('<div class="gridItemsRow">' + rowHtml + '</div>');
     }
 
-    fluidGrid(gridItems);
+    fluidGrid();
 }
 
 function getGridItemHtml(gridItem) {
-    var hasAuth = gridItem.authType == 'BASIC' || gridItem.authType == 'DIGEST';
-    var backgroundImage = hasAuth ? 'none' : 'url(\'' + getCacheProofGraphUrl(gridItem) + '\');';
-
     return  '<div class="gridItemContainer">' +
             '    <div class="gridItem paper">' +
             '        <div class="gridItem_graph"' +
             '           data-x="' + gridItem.x + '"' +
             '           data-y="' + gridItem.y + '"' +
-            '           style="background-image:' + backgroundImage + ';">' +
-        (hasAuth ?
-            '           <img src="img/loading.gif" class="gridItem_loading" />'
-        : '') +
+            '           style="background-image:url(\'' + getCacheProofGraphUrl(gridItem) + '\');">' +
             '        </div>' +
             '        <div class="gridItemInfos">' +
             '            <div class="gridItem_pluginName">' + gridItem.pluginName + '</div>' +
@@ -218,12 +201,8 @@ function fluidGrid() {
 function refreshGridItems() {
     for (var i=0; i<window.gridItems.length; i++) {
         var gridItem = window.gridItems[i];
-        if (gridItem.authType == 'BASIC' || gridItem.authType == 'DIGEST') {
-            // We'll receive base64 encoded image in a future and separate message
-        } else {
-            var graphUrl = getCacheProofGraphUrl(gridItem);
-            $("[data-x='" + gridItem.x + "'][data-y='" + gridItem.y + "']").css('background-image', 'url(\'' + graphUrl + '\')');
-        }
+        var graphUrl = getCacheProofGraphUrl(gridItem);
+        $("[data-x='" + gridItem.x + "'][data-y='" + gridItem.y + "']").css('background-image', 'url(\'' + graphUrl + '\')');
     }
 }
 
@@ -239,7 +218,6 @@ function getCacheProofGraphUrl(gridItem) {
 
 
 function preview(x, y) {
-    // TODO
     var gridItem = getGridItem(window.gridItems, x, y);
 
     if (gridItem == null)
