@@ -72,7 +72,8 @@ window.onload = function() {
         window.gridItems = [
             {'graphUrl': 'http://demo.munin-monitoring.org/munin-cgi/munin-cgi-graph/munin-monitoring.org/demo.munin-monitoring.org/multicpu1sec-{period}.png',
                 'pluginName': 'multicpu1sec', 'serverName': 'demo.munin-monitoring.org', 'x': '0', 'y': '0',
-                'masterName': 'munin-monitoring.org'},
+                'masterName': 'munin-monitoring.org',
+                'hdGraphUrl': 'http://demo.munin-monitoring.org/munin-cgi/munin-cgi-graph/munin-monitoring.org/demo.munin-monitoring.org/if1sec_eth0-pinpoint={pinpoint1},{pinpoint2}.png?size_x={size_x}&size_y={size_y}'},
             {'graphUrl': 'http://demo.munin-monitoring.org/munin-cgi/munin-cgi-graph/munin-monitoring.org/demo.munin-monitoring.org/multicpu1sec-{period}.png',
                 'pluginName': 'Traffic per interface', 'serverName': 'demo.munin-monitoring.org', 'x': '1', 'y': '0',
                 'masterName': 'munin-monitoring.org'},
@@ -225,11 +226,37 @@ function preview(x, y) {
 
     $('.card-pluginName').text(gridItem.pluginName);
     $('.card-serverName').text(gridItem.serverName);
-    // Find currently displayed graph source (try to get image from cache)
-    var graphUrl = $("[data-x='" + gridItem.x + "'][data-y='" + gridItem.y + "']").css('background-image');
-    // Get # from url('#')
-    graphUrl = graphUrl.substr("url('".length-1, graphUrl.length);
-    graphUrl = graphUrl.substr(0, graphUrl.length - "')".length-1);
+
+    // If the masters supports HD graphs (DynazoomAvailability = TRUE), Munin for Android sent us
+    // the hdGraphUrl. If not, let's just use the image currently displayed on the grid item.
+
+    var graphUrl = '';
+    var fullscreenCard = $('#fullscreenCard');
+    if ('hdGraphUrl' in gridItem) { // HD graph is available
+        var withPlaceholders = gridItem.hdGraphUrl;
+        // Replace placeholders ({pinpoint1}, {pinpoint2}, {size_x} and {size_y})
+        graphUrl = withPlaceholders.replace('{pinpoint1}', getFromPinPoint(window.currentPeriod));
+        graphUrl = graphUrl.replace('{pinpoint2}', getToPinPoint());
+        var graphSize = getHdGraphSize();
+        graphUrl = graphUrl.replace('{size_x}', getHDGraphWidth(graphSize[0]));
+        graphUrl = graphUrl.replace('{size_y}', graphSize[1]);
+
+        // Set fullscreen container dimensions
+        fullscreenCard.css('width', graphSize[0]+'px');
+        var marginTop = Math.floor(graphSize[1]/2) * -1 -100;
+        fullscreenCard.css('margin-top', marginTop+'px');
+    } else { // Not available
+        // Find currently displayed graph source (try to get image from cache)
+        graphUrl = $("[data-x='" + gridItem.x + "'][data-y='" + gridItem.y + "']").css('background-image');
+        // Get # from url('#')
+        graphUrl = graphUrl.substr("url('".length-1, graphUrl.length);
+        graphUrl = graphUrl.substr(0, graphUrl.length - "')".length-1);
+
+        // Set fullscreen container dimensions
+        fullscreenCard.css('width', '497px');
+        fullscreenCard.css('margin-top', '-200px');
+    }
+
     $('#card-graph').attr('src', graphUrl);
     $('#fullscreen').show();
 }
@@ -238,64 +265,4 @@ function cancelPreview() {
     $('.card-serverName').text('');
     $('#card-graph').attr('src', '');
     $('#fullscreen').hide();
-}
-
-
-/* STATIC FUNCTIONS */
-function log(msg) {
-    if (DEBUG)
-        console.log(msg);
-}
-
-function getMaxRows(gridItems) {
-    var maxRow = 0;
-    for (var i=0; i<gridItems.length; i++) {
-        var y = gridItems[i].y;
-        if (y > maxRow)
-            maxRow = y;
-    }
-    return maxRow;
-}
-
-function getGridItem(gridItems, x, y) {
-    for (var i=0; i<gridItems.length; i++) {
-        if (gridItems[i].x == x && gridItems[i].y == y)
-            return gridItems[i];
-    }
-    return null;
-}
-
-function getRowItems(gridItems, y) {
-    var rowItems = [];
-    for (var i=0; i<gridItems.length; i++) {
-        if (gridItems[i].y == y)
-            rowItems[rowItems.length] = gridItems[i];
-    }
-
-    return rowItems;
-}
-
-function getWidestRowItemsCount(gridItems) {
-    var widestRow = -1;
-    var widestRowCount = -1;
-
-    for (var y=0; y<=getMaxRows(gridItems); y++) {
-        var nbItems = getRowItems(gridItems, y).length;
-        if (nbItems > widestRowCount) {
-            widestRowCount = nbItems;
-            widestRow = y;
-        }
-    }
-
-    return widestRowCount;
-}
-
-function getPeriod(period) {
-    switch (period) {
-        case 'DAY': return PeriodEnum.DAY; break;
-        case 'WEEK': return PeriodEnum.WEEK; break;
-        case 'MONTH': return PeriodEnum.MONTH; break;
-        case 'YEAR': return PeriodEnum.YEAR; break;
-        default: return PeriodEnum.DAY; break;
-    }
 }
