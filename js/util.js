@@ -1,7 +1,5 @@
 function getHdGraphSize() {
-    var body = $('body');
-
-    return [ body.width()*3/4, body.height()*3/4 ];
+    return [ $(window).width()*3/4, $(window).height()*3/4 ];
 }
 
 function log(msg) {
