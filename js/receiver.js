@@ -37,10 +37,15 @@ window.onload = function() {
 
         // handler for 'senderdisconnected' event
         castReceiverManager.onSenderDisconnected = function(event) {
+            // Here, either the sender intentionally disconnected (closed_by_peer),
+            // or the connection has been lost (transport_closed)
             log('Received Sender Disconnected event: ' + event.data);
-            if (window.castReceiverManager.getSenders().length == 0) {
+            if (event.reason == cast.receiver.system.DisconnectReason.REQUESTED_BY_SENDER
+                && window.castReceiverManager.getSenders().length == 0) {
                 window.close();
             }
+            else
+                log('(ignoring)');
         };
 
         // handler for 'systemvolumechanged' event
