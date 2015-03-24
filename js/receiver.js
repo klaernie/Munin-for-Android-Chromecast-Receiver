@@ -1,4 +1,4 @@
-// Public page URL: https://chteuchteu.github.io/munin-for-android-chromecast-receiver/
+// Public page URL: https://chteuchteu.github.io/Munin-for-Android-Chromecast-Receiver/
 
 // Set CHROMECAST to false when debugging in a web browser
 var CHROMECAST = true;
