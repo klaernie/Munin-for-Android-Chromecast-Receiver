@@ -5,6 +5,8 @@ var CHROMECAST = true;
 // DEBUG=false: disable logging
 var DEBUG = true;
 
+var AUTOREFRESH_INTERVAL = 5*60*1000; // 5 minutes
+
 PeriodEnum = {
     DAY: { val: 'day' },
     WEEK: { val: 'week' },
@@ -109,6 +111,8 @@ function hideLoading() {
 
 function initGrid() {
     $('#gridName').text(window.gridName);
+
+    startAutoRefresh();
 }
 
 function receiveMessage(text) {
@@ -140,6 +144,10 @@ function receiveMessage(text) {
     }
 }
 
+/**
+ * Method called once the connection with the sender is established,
+ *  but also each time a change is made in the Grid on the sender
+ */
 function inflateGridItems() {
     var gridsContainer = $('#gridsContainer');
     gridsContainer.html('');
@@ -157,6 +165,15 @@ function inflateGridItems() {
     }
 
     fluidGrid();
+}
+
+function startAutoRefresh() {
+    (function(){
+        var f = function() {
+            refreshGridItems();
+        };
+        window.setInterval(f, AUTOREFRESH_INTERVAL);
+    })();
 }
 
 function getGridItemHtml(gridItem) {
