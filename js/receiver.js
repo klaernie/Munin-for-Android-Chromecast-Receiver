@@ -27,7 +27,7 @@ window.onload = function() {
         // handler for the 'ready' event
         castReceiverManager.onReady = function(event) {
             log('Received Ready event: ' + JSON.stringify(event.data));
-            window.castReceiverManager.setApplicationState("Application status is ready...");
+            window.castReceiverManager.setApplicationState("Munin for Android");
             hideLoading();
         };
 
@@ -111,7 +111,7 @@ function hideLoading() {
 
 function initGrid() {
     $('#gridName').text(window.gridName);
-
+    window.castReceiverManager.setApplicationState("Munin for Android: "+window.gridName);
     startAutoRefresh();
 }
 
