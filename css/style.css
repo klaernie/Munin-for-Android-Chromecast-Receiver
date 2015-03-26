@@ -10,7 +10,7 @@ body {
     background: -webkit-linear-gradient(top,  #c6c8c7 0%,#d0d4d5 34%,#ececec 67%,#fefefe 100%); /* Chrome10+,Safari5.1+ */
     background: linear-gradient(to bottom,  #c6c8c7 0%,#d0d4d5 34%,#ececec 67%,#fefefe 100%); /* W3C */
 }
-.header { padding: 10px 60px; }
+.header { padding: 2px 60px; }
 .appName {
     margin: 0;
     padding: 0;
@@ -39,13 +39,16 @@ body {
     font-size: 23px;
     display: block;
     position: fixed;
-    top: 20px;
+    top: 10px;
     left: 0;
     width: 100%;
 }
 .gridsContainer {
-    padding: 30px 0;
+    padding: 0 20px;
     text-align: center;
+    display: table;
+    box-sizing: border-box;
+    width: 100%;
 }
 .paper {
     box-shadow: 0 3px 10px rgba(0, 0, 0, 0.16);
@@ -56,13 +59,14 @@ body {
     border-radius: 2px;
 }
 
-.gridItemsRow { display: table; }
+.gridItemsRow { display: table-row; }
 .gridItemContainer {
-    display: table-cell;
-    min-width: 330px;
-    max-width: 527px;
-    padding: 10px 15px;
+    display: inline-block;
+    width: 0;
+    height: 0;
+    padding: 8px 10px;
     box-sizing: border-box;
+    overflow: hidden;
 }
 .gridItem {
     width: 100%;
@@ -80,17 +84,25 @@ body {
 }
 .gridItemInfos {
     background: #f0f0f0;
-    padding: 15px 20px;
+    padding: 10px 15px;
     border-top: 1px solid rgba(0, 0, 0, 0.1);
     border-bottom-left-radius: 3px;
     border-bottom-right-radius: 3px;
+    height: 58px;
+    box-sizing: border-box;
+    overflow: hidden;
+}
+.gridItemInfos > * {
+    line-height: 1em;
+    height: 1em;
+    overflow: hidden;
+    width: 200%;
 }
 .gridItem_pluginName {
     font-size: 18px;
     color: #555;
 }
 .gridItem_serverName { color: #999; }
-#gridsContainer { padding: 20px 40px 0 40px; }
 .fullscreen {
     position: fixed;
     width: 100%;

@@ -1,7 +1,7 @@
 // Public page URL: https://chteuchteu.github.io/Munin-for-Android-Chromecast-Receiver/
 
 // Set CHROMECAST to false when debugging in a web browser
-var CHROMECAST = true;
+var CHROMECAST = false;
 // DEBUG=false: disable logging
 var DEBUG = true;
 
@@ -86,7 +86,7 @@ window.onload = function() {
                 'masterName': 'munin-monitoring.org'},
             {'graphUrl': 'http://demo.munin-monitoring.org/munin-cgi/munin-cgi-graph/munin-monitoring.org/demo.munin-monitoring.org/multicpu1sec-{period}.png',
                 'pluginName': 'CPU usage', 'serverName': 'demo.munin-monitoring.org', 'x': '2', 'y': '0',
-                'masterName': 'munin-monitoring.org'},
+                'masterName': 'demo.munin-monitoring.org'},
             {'graphUrl': 'http://demo.munin-monitoring.org/munin-cgi/munin-cgi-graph/munin-monitoring.org/demo.munin-monitoring.org/multicpu1sec-{period}.png',
                 'pluginName': 'multicpu1sec', 'serverName': 'demo.munin-monitoring.org', 'x': '0', 'y': '1',
                 'masterName': 'munin-monitoring.org'},
@@ -98,12 +98,22 @@ window.onload = function() {
                 'masterName': 'munin-monitoring.org'},
             {'graphUrl': 'http://demo.munin-monitoring.org/munin-cgi/munin-cgi-graph/munin-monitoring.org/demo.munin-monitoring.org/multicpu1sec-{period}.png',
                 'pluginName': 'multicpu1sec', 'serverName': 'demo.munin-monitoring.org', 'x': '0', 'y': '2',
+                'masterName': 'munin-monitoring.org'},
+            {'graphUrl': 'http://demo.munin-monitoring.org/munin-cgi/munin-cgi-graph/munin-monitoring.org/demo.munin-monitoring.org/multicpu1sec-{period}.png',
+                'pluginName': 'multicpu1sec', 'serverName': 'demo.munin-monitoring.org', 'x': '3', 'y': '0',
+                'masterName': 'munin-monitoring.org'},
+            {'graphUrl': 'http://demo.munin-monitoring.org/munin-cgi/munin-cgi-graph/munin-monitoring.org/demo.munin-monitoring.org/multicpu1sec-{period}.png',
+                'pluginName': 'multicpu1sec', 'serverName': 'demo.munin-monitoring.org', 'x': '4', 'y': '0',
                 'masterName': 'munin-monitoring.org'}
         ];
 
         inflateGridItems();
     }
-};
+});
+
+if (!CHROMECAST) {
+    $(window).resize(fluidGrid);
+}
 
 function hideLoading() {
     $('#preloader').delay(2500).fadeOut();
@@ -194,32 +204,55 @@ function getGridItemHtml(gridItem) {
 }
 
 function fluidGrid() {
-    if (window.gridItems.length == 0)
+    if (!('gridItems' in window)
+        || typeof window.gridItems === 'undefined'
+        || window.gridItems.length == 0) {
         return;
+    }
 
     var gridItemsRowList = $('.gridItemsRow');
+    var gridsContainer = $('#gridsContainer');
+    var firstGridItemContainer = $('.gridItemContainer').first();
 
-    // Set gridItemContainers width
-    var gridItemMaxWidthCssAttr = $('.gridItemContainer').first().css('max-width');
-    var gridItemMaxWidth = gridItemMaxWidthCssAttr.substr(0, 3);
+    // HEIGHT
+    // Set gridItem containers height
+    var linesCount = getLinesCount(window.gridItems);
+    var availableHeight = $('body').height() - $('.header').height() - 10;
+    var gridItemHeight = Math.trunc(availableHeight/linesCount);
+    gridItemsRowList.children().css('height', gridItemHeight + 'px');
+
+    // Set gridItem height (set by gridItem_graph height)
+    var legendHeight = $('.gridItemInfos').first().outerHeight();
+    var graphHeight = firstGridItemContainer.height() - legendHeight;
+    $('.gridItem_graph').css('height', graphHeight);
+
+
+    // WIDTH
     var widestRowItemsCount = getWidestRowItemsCount(window.gridItems);
-    var width = ($('#gridsContainer').width() - 30) / widestRowItemsCount;
-    if (width > gridItemMaxWidth)
-        width = gridItemMaxWidth;
-    width = Math.trunc(width);
+    var maxWidth = (gridsContainer.width() - 30) / widestRowItemsCount;
+    maxWidth = Math.trunc(maxWidth);
+
+    // Keep graph ratio
+    var ratio = 497/228;
+
+    var horizontalPadding = firstGridItemContainer.outerWidth() - firstGridItemContainer.width();
+    var width = Math.trunc(graphHeight * ratio);
+
+    var recomputeHeight = false;
+    if (width > maxWidth) {
+        width = maxWidth;
+        recomputeHeight = true;
+    }
 
     gridItemsRowList.children().css('min-width', width);
 
-    // Set gridItem_graphs height
-    var ratio = 497/228;
-    gridItemsRowList.each(function() {
-        $(this).find('.gridItem_graph').each(function() {
-            var width = $(this).width();
-            var height = width * (1/ratio);
-            height = Math.trunc(height);
-            $(this).css('height', height);
-        });
-    });
+    if (recomputeHeight) {
+        // We know the width
+        // 497  /   228
+        // width /
+        var height = width*(1/ratio);
+        $('.gridItem_graph').css('height', height);
+    }
 }
 
 function refreshGridItems() {

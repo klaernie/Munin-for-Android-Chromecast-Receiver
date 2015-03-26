@@ -50,6 +50,10 @@ function getWidestRowItemsCount(gridItems) {
     return widestRowCount;
 }
 
+function getLinesCount(gridItems) {
+    return parseInt(getMaxRows(gridItems))+1;
+}
+
 function getPeriod(period) {
     switch (period) {
         case 'DAY': return PeriodEnum.DAY; break;
