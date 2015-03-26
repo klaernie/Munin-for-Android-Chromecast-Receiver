@@ -111,7 +111,8 @@ function hideLoading() {
 
 function initGrid() {
     $('#gridName').text(window.gridName);
-    window.castReceiverManager.setApplicationState("Munin for Android: "+window.gridName);
+    if (CHROMECAST)
+        window.castReceiverManager.setApplicationState("Munin for Android: " + window.gridName);
     startAutoRefresh();
 }
 

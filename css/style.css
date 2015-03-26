@@ -69,8 +69,7 @@ body {
     text-align: left;
 }
 .gridItem_graph {
-    background-color: #f0f0f0;
-    background-repeat: no-repeat;
+    background: #f0f0f0 no-repeat;
     background-size: cover;
     height: 228px;
     border-top: 2px solid rgba(255, 255, 255, 0.5);
