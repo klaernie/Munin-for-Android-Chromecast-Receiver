@@ -48,7 +48,7 @@ body {
     text-align: center;
     display: table;
     box-sizing: border-box;
-    width: 100%;
+    margin: auto;
 }
 .paper {
     box-shadow: 0 3px 10px rgba(0, 0, 0, 0.16);
@@ -59,7 +59,9 @@ body {
     border-radius: 2px;
 }
 
-.gridItemsRow { display: table-row; }
+.gridItemsRow {
+    text-align: left;
+}
 .gridItemContainer {
     display: inline-block;
     width: 0;

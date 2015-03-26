@@ -14,7 +14,7 @@ PeriodEnum = {
     YEAR: { val: 'year' }
 };
 
-window.onload = function() {
+$(document).ready(function() {
     window.gridItems = [];
     window.gridName = '';
     window.currentPeriod = PeriodEnum.DAY;
@@ -212,6 +212,7 @@ function fluidGrid() {
 
     var gridItemsRowList = $('.gridItemsRow');
     var gridsContainer = $('#gridsContainer');
+    var gridsContainerPadding = gridsContainer.outerWidth() - gridsContainer.width();
     var firstGridItemContainer = $('.gridItemContainer').first();
 
     // HEIGHT
@@ -229,7 +230,7 @@ function fluidGrid() {
 
     // WIDTH
     var widestRowItemsCount = getWidestRowItemsCount(window.gridItems);
-    var maxWidth = (gridsContainer.width() - 30) / widestRowItemsCount;
+    var maxWidth = ($('body').width() - gridsContainerPadding - 30) / widestRowItemsCount;
     maxWidth = Math.trunc(maxWidth);
 
     // Keep graph ratio
