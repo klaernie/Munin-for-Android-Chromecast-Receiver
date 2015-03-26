@@ -1,7 +1,7 @@
 // Public page URL: https://chteuchteu.github.io/Munin-for-Android-Chromecast-Receiver/
 
 // Set CHROMECAST to false when debugging in a web browser
-var CHROMECAST = true;
+var CHROMECAST = (typeof cast == 'object');
 // DEBUG=false: disable logging
 var DEBUG = true;
 
